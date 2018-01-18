@@ -5,5 +5,12 @@
         "execute"    : true ,
         "description": "",
         "owner"      : ""
+    },
+    {
+        "moduleName" : "moduleGA",
+        "path"       : "moduleGA/moduleGA.py",
+        "execute"    : true ,
+        "description": "",
+        "owner"      : ""
     }
 ]

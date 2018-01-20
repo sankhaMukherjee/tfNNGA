@@ -1,12 +1,16 @@
 from logs import logDecorator as lD 
+from lib.libGA import GA
 import json
+
+import numpy      as np
+import tensorflow as tf
 
 config = json.load(open('../config/config.json'))
 logBase = config['logging']['logBase'] + '.moduleGA'
 
 
-@lD.log(logBase + '.doSomething')
-def doSomething(logger):
+@lD.log(logBase + '.initGA')
+def initGA(logger):
     '''print a line
     
     This function simply prints a single line
@@ -16,6 +20,33 @@ def doSomething(logger):
     logger : {[type]}
         [description]
     '''
+
+    try:
+        GAconfig = json.load(open('../config/GA.json'))
+    except Exception as e:
+        logger.error('Unable to obtain the configuration for GA')
+        return
+
+    # Let us start with a simple linear regression problem. 
+    # Equation:
+    #     y = WX 
+    # The shapes that we have planned ...
+    #     (1, None)  = (1, 3) x (3, None)
+    # In this specific case, W = [0.5, 0.2, 1]
+
+    W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)
+    X  = tf.placeholder(dtype=tf.float32, shape=(3, None))
+    y  = tf.placeholder(dtype=tf.float32, shape=(None) )
+
+    yHat  = tf.matmul(W, X)
+    error = tf.reduce_mean( tf.sqrt((y - yHat)*(y - yHat)) )
+
+    variables    = [W]
+    costFunction = error
+
+    simpleGA = GA.GA(variables, costFunction, GAconfig, 'initType')
+    print(simpleGA)
+
 
     print('We are in the GA module')
 
@@ -35,7 +66,7 @@ def main(logger):
         The logger function
     '''
 
-    doSomething()
+    initGA()
 
     return
 

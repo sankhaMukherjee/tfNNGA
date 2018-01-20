@@ -1,3 +1,4 @@
+from tqdm import tqdm
 from logs import logDecorator as lD
 import json
 
@@ -51,6 +52,22 @@ class GA():
             self.X            = X
             self.y            = y
 
+            # Now we shall generate the population
+            # Note that how this is going to be generates will 
+            # be done later ... 
+            # ----------------------------------------------------
+            print('Generating initial population ...')
+            self.population   = []
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                tempVars = []
+                for i in tqdm(range(self.GAconfig['numChildren'])):
+                    temp = [(v + (np.random.random( v.shape ) - 0.5) * 2) for v in self.variables]
+                    sess.run(temp)
+                    tempVars.append( temp )
+
+                self.population.append( tempVars )
+
             assert type(self.name) == str
 
         except Exception as e:
@@ -94,6 +111,15 @@ class GA():
         for i, v in enumerate(self.variables):
             result += '\tShape of variable {:5d} = {}\n'.format(i, v.shape)
         result += '.'*30 + '\n'
+        result += ' Characteristics of the population ...\n'
+        result += 'population variable value\n'
+
+        for i, p in enumerate(self.population):
+            for j, variables in enumerate(p):
+                for k, v in enumerate(variables):
+                    result +=  '{:10} {:8} {:5} --> {}\n'.format(i, j, k, str(v.shape))
+        result += '.'*30 + '\n'
+
 
         return result
 
@@ -145,7 +171,7 @@ class GA():
             y {[type]} -- [description]
         '''
 
-        print('=========================')
+        print('======[ Session 1   ]===================')
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
@@ -162,6 +188,16 @@ class GA():
 
             print('--------- This is after the addition ----------------')
             print(sess.run(self.variables))
+
+        print('======[ Session 2   ]===================')
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            print('This is to make sure that the variables span across sessions ...')
+            print(sess.run(self.variables))
+            print('This is to make sure that these are independent variables ...')
+            print(sess.run(self.population[0][0] ))
+
+
 
         return 
 

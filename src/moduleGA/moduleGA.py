@@ -9,8 +9,8 @@ config = json.load(open('../config/config.json'))
 logBase = config['logging']['logBase'] + '.moduleGA'
 
 
-@lD.log(logBase + '.initGA')
-def initGA(logger):
+@lD.log(logBase + '.testGA')
+def testGA(logger):
     '''print a line
     
     This function simply prints a single line
@@ -59,10 +59,31 @@ def initGA(logger):
     
     print('\nThis should give an error of approximately 2 ...')
     print(simpleGA.findError(Xarr, yarr + 2))
+
+    print('\n This is using the fit function')
+    print(simpleGA.fit(Xarr, yarr))
+
+    return
+
+@lD.log(logBase + '.initGA')
+def initGA(logger):
+    '''print a line
     
+    This function simply prints a single line
+    
+    Parameters
+    ----------
+    logger : {[type]}
+        [description]
+    '''
+
+    try:
+        GAconfig = json.load(open('../config/GA.json'))
+    except Exception as e:
+        logger.error('Unable to obtain the configuration for GA')
+        return
 
     print('We are in the GA module')
-
     return
 
 @lD.log(logBase + '.main')
@@ -79,6 +100,7 @@ def main(logger):
         The logger function
     '''
 
+    testGA()
     initGA()
 
     return

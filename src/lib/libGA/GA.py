@@ -1,6 +1,7 @@
 from logs import logDecorator as lD
 import json
 
+import numpy      as np
 import tensorflow as tf
 
 config = json.load(open('../config/config.json'))
@@ -40,6 +41,8 @@ class GA():
         '''
 
         self.properConfig = False
+        self.currentErr   = np.nan
+
         try:
             self.name         = name
             self.GAconfig     = GAconfig
@@ -125,4 +128,43 @@ class GA():
                 })
 
         return result
+
+    @lD.log(logBase + '.fit')
+    def fit(logger, self, X, y):
+        '''[summary]
+        
+        [description]
+        
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {[type]} -- [description]
+            self {[type]} -- [description]
+            X {[type]} -- [description]
+            y {[type]} -- [description]
+        '''
+
+        print('=========================')
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            print('--------- This is before the addition ----------------')
+            print(sess.run(self.variables))
+
+            print('--------- This is during the addition ----------------')
+            vNew = []
+            for i, v in enumerate(self.variables):
+                v = v + 1
+                print(sess.run( v ))
+                vNew.append(v)
+            self.variables = vNew
+
+            print('--------- This is after the addition ----------------')
+            print(sess.run(self.variables))
+
+        return 
+
+
+
 

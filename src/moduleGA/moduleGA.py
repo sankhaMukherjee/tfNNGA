@@ -34,7 +34,12 @@ def initGA(logger):
     #     (1, None)  = (1, 3) x (3, None)
     # In this specific case, W = [0.5, 0.2, 1]
 
-    W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)
+    Warr = np.array([[0.1, 0, 0]])
+    Xarr = np.random.random((3, 100))
+    yarr = np.dot(Warr, Xarr)
+
+    # W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)
+    W  = tf.convert_to_tensor(Warr, dtype=tf.float32)
     X  = tf.placeholder(dtype=tf.float32, shape=(3, None))
     y  = tf.placeholder(dtype=tf.float32, shape=(None) )
 
@@ -44,9 +49,17 @@ def initGA(logger):
     variables    = [W]
     costFunction = error
 
-    simpleGA = GA.GA(variables, costFunction, GAconfig, 'initType')
+    simpleGA = GA.GA(variables, costFunction, GAconfig, X, y,'initType')
     print(simpleGA)
+    print('\nThis should give low error ...')
+    print(simpleGA.findError(Xarr, yarr))
 
+    print('\nThis should give an error of approximately 1 ...')
+    print(simpleGA.findError(Xarr, yarr + 1))
+    
+    print('\nThis should give an error of approximately 2 ...')
+    print(simpleGA.findError(Xarr, yarr + 2))
+    
 
     print('We are in the GA module')
 

@@ -1,9 +1,10 @@
 from tqdm import tqdm
 from logs import logDecorator as lD
-import json
+import json, os
 
-import numpy      as np
-import tensorflow as tf
+import numpy             as np
+import tensorflow        as tf
+import matplotlib.pyplot as plt
 
 config = json.load(open('../config/config.json'))
 logBase = config['logging']['logBase'] + '.lib.libGA.GA'
@@ -168,8 +169,10 @@ class GA():
             lD.log
         
         Arguments:
-            logger {[type]} -- [description]
-            self {[type]} -- [description]
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
             X {[type]} -- [description]
             y {[type]} -- [description]
         '''
@@ -253,6 +256,48 @@ class GA():
 
         return results
 
+    @lD.log(logBase + '.crossover')
+    def crossover(logger, self, X, y):
+        '''create a crossover for generating a new population
+        
+        The crossover function is created. This is going to assume that
+        the population cost has already been generated. calling this step
+        once will result in the generation of a new population. 
+        
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
+            X {numpy.array} -- The set of input values to be tested
+            y {numpy.array} -- The expected results
+        ''' 
+
+        if not self.properConfig:
+            logger.error('The instance is not properly initialized')
+            return
+
+        normalize = np.array(self.currentErr).copy()
+        normalize = normalize / normalize.max()
+        normalize = 1 - normalize
+        normalize = normalize / normalize.sum()
+
+        # This stuf is for testing ...
+        if False:
+            print(list(zip(normalize, self.currentErr)))
+            plt.plot(normalize, self.currentErr, 's', mfc='None', mec = 'blue', alpha = 0.5)
+            plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'testNormalize.png'))
+
+
+        choices = np.random.choice( range(len(self.currentErr)), size=(100, 2) , p=normalize )
+        print(choices)
+
+
+        return
+
     @lD.log(logBase + '.fit')
     def fit(logger, self, X, y):
         '''[summary]
@@ -263,8 +308,10 @@ class GA():
             lD.log
         
         Arguments:
-            logger {[type]} -- [description]
-            self {[type]} -- [description]
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
             X {[type]} -- [description]
             y {[type]} -- [description]
         '''

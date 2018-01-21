@@ -52,17 +52,26 @@ def testGA(logger):
     simpleGA = GA.GA(variables, costFunction, GAconfig, X, y,'initType')
     simpleGA.findPopulationCosts(Xarr, yarr)
     print(simpleGA)
-    print('\nThis should give low error ...')
-    print(simpleGA.findError(Xarr, yarr))
 
-    print('\nThis should give an error of approximately 1 ...')
-    print(simpleGA.findError(Xarr, yarr + 1))
-    
-    print('\nThis should give an error of approximately 2 ...')
-    print(simpleGA.findError(Xarr, yarr + 2))
+    if True:
+        print('\nThis is for testing the crossover ...')
+        print(simpleGA.crossover(Xarr, yarr))
 
-    print('\n This is using the fit function')
-    print(simpleGA.fit(Xarr, yarr))
+
+
+    if False:
+        print('\nThis should give low error ...')
+        print(simpleGA.findError(Xarr, yarr))
+
+        print('\nThis should give an error of approximately 1 ...')
+        print(simpleGA.findError(Xarr, yarr + 1))
+        
+        print('\nThis should give an error of approximately 2 ...')
+        print(simpleGA.findError(Xarr, yarr + 2))
+
+    if False:
+        print('\n This is using the fit function')
+        print(simpleGA.fit(Xarr, yarr))
 
     return
 

@@ -42,7 +42,7 @@ class GA():
         '''
 
         self.properConfig = False
-        self.currentErr   = np.nan
+        self.currentErr   = None
 
         try:
             self.name         = name
@@ -53,20 +53,22 @@ class GA():
             self.y            = y
 
             # Now we shall generate the population
+            print('Generating initial population ...')
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+                locVars = sess.run(self.variables)
+            
+            # Now we generate new variables directly from the old ones
             # Note that how this is going to be generates will 
             # be done later ... 
             # ----------------------------------------------------
-            print('Generating initial population ...')
             self.population   = []
-            with tf.Session() as sess:
-                sess.run(tf.global_variables_initializer())
-                tempVars = []
-                for i in tqdm(range(self.GAconfig['numChildren'])):
-                    temp = [(v + (np.random.random( v.shape ) - 0.5) * 2) for v in self.variables]
-                    sess.run(temp)
-                    tempVars.append( temp )
-
-                self.population.append( tempVars )
+            for i in tqdm(range(self.GAconfig['numChildren'])):
+                temp = []
+                for j, v in enumerate(locVars):
+                    v = (v + (np.random.random( v.shape ) - 0.5) * 2)
+                    temp.append(v)
+                self.population.append( temp )
 
             assert type(self.name) == str
 
@@ -112,14 +114,11 @@ class GA():
             result += '\tShape of variable {:5d} = {}\n'.format(i, v.shape)
         result += '.'*30 + '\n'
         result += ' Characteristics of the population ...\n'
-        result += 'population variable value\n'
-
-        for i, p in enumerate(self.population):
-            for j, variables in enumerate(p):
-                for k, v in enumerate(variables):
-                    result +=  '{:10} {:8} {:5} --> {}\n'.format(i, j, k, str(v.shape))
         result += '.'*30 + '\n'
-
+        result += ' Characteristics of the error ...\n'
+        result += 'quan:value\n'
+        if self.currentErr is not None:
+            result += '   0:{:.4}\n  10:{:.4}\n  25:{:.4}\n  50:{:.4}\n  75:{:.4}\n  90:{:.4}\n 100:{:.4}\n'.format(*np.percentile(self.currentErr, [0, 10, 25, 50, 75, 90, 100]))
 
         return result
 
@@ -146,6 +145,10 @@ class GA():
             y {numpy.array} -- The expected results
         '''
 
+        if not self.properConfig:
+            logger.error('Unable to generate the current errors due to improper configuration')
+            return
+
         result = None
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -155,8 +158,8 @@ class GA():
 
         return result
 
-    @lD.log(logBase + '.fit')
-    def fit(logger, self, X, y):
+    @lD.log(logBase + '.testVariableChange')
+    def testVariableChange(logger, self, X, y):
         '''[summary]
         
         [description]
@@ -197,9 +200,97 @@ class GA():
             print('This is to make sure that these are independent variables ...')
             print(sess.run(self.population[0][0] ))
 
+        return 
 
+    @lD.log(logBase + '.findCosts')
+    def findPopulationCosts(logger, self, X, y):
+        '''finds the cost of the entire population. 
+        
+        This is similar to the function findError except that this
+        function finds the cost to the entire population rather than
+        the cost to the entire population that we are trying to
+        generate rather than only the cost of the single variable. This
+        function is also going to update the self.currentError variable.
+        
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
+            X {numpy.array} -- The set of input values to be tested
+            y {numpy.array} -- The expected results
+        
+        Returns:
+            numpy.array -- the cost calculated for each of the units in the
+                current population. If there is an error, this is going to
+                return None. 
+        '''
+        results = None
+        self.currentErr = None
+
+        try:
+            results = []
+            with tf.Session() as sess:
+                sess.run(tf.global_variables_initializer())
+
+                # print(self.population)
+                for ps in self.population:
+                    for i, v in enumerate(self.variables): 
+                        sess.run(tf.assign( self.variables[i], ps[i] ))
+
+                    result = sess.run(self.costFunction, feed_dict={
+                                            self.X : X, self.y : y
+                                            })
+                    results.append(result)
+
+            self.currentErr = results
+
+        except Exception as e:
+            logger.error('Unable to generate the costs of the current population: {}'.format(str(e)))
+
+        return results
+
+    @lD.log(logBase + '.fit')
+    def fit(logger, self, X, y):
+        '''[summary]
+        
+        [description]
+        
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {[type]} -- [description]
+            self {[type]} -- [description]
+            X {[type]} -- [description]
+            y {[type]} -- [description]
+        '''
+
+        if not self.properConfig:
+            logger.error('Unable to generate the current errors due to improper configuration')
+            return
+
+        results = []
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            # print(self.population)
+            for ps in self.population:
+                for i, v in enumerate(self.variables): 
+                    sess.run(tf.assign( self.variables[i], ps[i] ))
+
+                result = sess.run(self.costFunction, feed_dict={
+                                        self.X : X, self.y : y
+                                        })
+                results.append(result)
+
+        print('A total of {} results obtained ...'.format(len(results)))
 
         return 
+
 
 
 

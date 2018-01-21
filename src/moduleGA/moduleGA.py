@@ -39,7 +39,7 @@ def testGA(logger):
     yarr = np.dot(Warr, Xarr)
 
     # W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)
-    W  = tf.convert_to_tensor(Warr, dtype=tf.float32)
+    W  = tf.Variable(tf.convert_to_tensor(Warr, dtype=tf.float32))
     X  = tf.placeholder(dtype=tf.float32, shape=(3, None))
     y  = tf.placeholder(dtype=tf.float32, shape=(None) )
 
@@ -50,6 +50,7 @@ def testGA(logger):
     costFunction = error
 
     simpleGA = GA.GA(variables, costFunction, GAconfig, X, y,'initType')
+    simpleGA.findPopulationCosts(Xarr, yarr)
     print(simpleGA)
     print('\nThis should give low error ...')
     print(simpleGA.findError(Xarr, yarr))

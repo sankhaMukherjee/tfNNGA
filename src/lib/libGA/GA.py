@@ -68,6 +68,7 @@ class GA():
                 temp = []
                 for j, v in enumerate(locVars):
                     v = (v + (np.random.random( v.shape ) - 0.5) * 2)
+                    v = tf.Variable(tf.convert_to_tensor(v, dtype=tf.float32))
                     temp.append(v)
                 self.population.append( temp )
 
@@ -293,7 +294,14 @@ class GA():
 
 
         choices = np.random.choice( range(len(self.currentErr)), size=(100, 2) , p=normalize )
-        print(choices)
+        alphas  = np.random.random(len(self.currentErr))
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            for (c1, c2), a in zip(choices, alphas):
+                calc = [ a*m + (1-a)*n  for m,n in zip(self.population[c1], self.population[c2])]
+                print(sess.run(calc))
+                
 
 
         return

@@ -1,7 +1,7 @@
 #!/bin/bash 
 
 # --- First, run the program
-python3 tfNNGA.py
+python3 tfNNGA.py 2>&1 | grep -v 'cpu_feature_guard.cc'
 
 # --- Check to see if there was an error
 logFile=$(ls logs/*.log | sort | tail -n1)

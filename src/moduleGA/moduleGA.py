@@ -55,7 +55,9 @@ def testGA(logger):
 
     if True:
         print('\nThis is for testing the crossover ...')
-        print(simpleGA.crossover(Xarr, yarr))
+        simpleGA.printCurrErr()
+        for i in range(30):
+            simpleGA.crossover(Xarr, yarr)
 
     if False:
         print('\nThis should give low error ...')

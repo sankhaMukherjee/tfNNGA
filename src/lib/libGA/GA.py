@@ -250,12 +250,33 @@ class GA():
                                             })
                     results.append(result)
 
-            self.currentErr = results
+            self.currentErr = np.array(results)
 
         except Exception as e:
             logger.error('Unable to generate the costs of the current population: {}'.format(str(e)))
 
         return results
+
+    @lD.log(logBase + '.printCurrErr')
+    def printCurrErr(logger, self):
+        '''Summarize the current error
+        
+        Prints a summary of the current error. 
+
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
+        '''
+
+    
+        print('Error Summary: {:.5}, {:.5}, {:.5}'.format(
+            self.currentErr.min(), self.currentErr.mean(), self.currentErr.max()), flush=True  )
+        return
 
     @lD.log(logBase + '.crossover')
     def crossover(logger, self, X, y):
@@ -276,8 +297,6 @@ class GA():
             X {numpy.array} -- The set of input values to be tested
             y {numpy.array} -- The expected results
         ''' 
-
-        print('-----[This is the crossover branch]----')
 
         if not self.properConfig:
             logger.error('The instance is not properly initialized')
@@ -300,11 +319,36 @@ class GA():
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
+
+            # Calculate a set of new weights for the children 
+            calcs = []
             for (c1, c2), a in zip(choices, alphas):
                 calc = [ a*m + (1-a)*n  for m,n in zip(self.population[c1], self.population[c2])]
-                print(sess.run(calc))
-                
+                calcs.append(calc)
+            
+            resultErr = []
+            for c in calcs:
+                for i, v in enumerate(self.variables): 
+                    sess.run(tf.assign( self.variables[i], c[i] ))
+                resultErr.append( sess.run(self.costFunction, 
+                        feed_dict = { self.X : X, self.y : y }))
 
+        # Update the population
+        resultTensors = []
+        for i, ((c1, c2), v) in enumerate(zip(choices, resultErr)):
+            minVal = min( [self.currentErr[c1], self.currentErr[c2], v] )
+            if minVal == self.currentErr[c1]:
+                resultTensors.append( self.population[c1] )
+            elif minVal == self.currentErr[c2]:
+                resultTensors.append( self.population[c2] )
+            else:
+                resultTensors.append( calcs[i] )
+
+        self.population = resultTensors
+
+        # Update the costs
+        self.findPopulationCosts(X, y)
+        self.printCurrErr()
 
         return
 

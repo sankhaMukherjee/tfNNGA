@@ -277,6 +277,8 @@ class GA():
             y {numpy.array} -- The expected results
         ''' 
 
+        print('-----[This is the crossover branch]----')
+
         if not self.properConfig:
             logger.error('The instance is not properly initialized')
             return

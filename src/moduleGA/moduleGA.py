@@ -35,7 +35,7 @@ def testGA(logger):
     # In this specific case, W = [0.5, 0.2, 1]
 
     Warr = np.array([[0.1, 0, 0]])
-    Xarr = np.random.random((3, 100))
+    Xarr = np.random.random((3, 1000))
     yarr = np.dot(Warr, Xarr)
 
     # W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)
@@ -58,6 +58,7 @@ def testGA(logger):
         simpleGA.printCurrErr()
         for i in range(30):
             simpleGA.crossover(Xarr, yarr)
+            simpleGA.mutation(Xarr, yarr)
 
     if False:
         print('\nThis should give low error ...')

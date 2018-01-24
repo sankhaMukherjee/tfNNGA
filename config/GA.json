@@ -1,3 +1,15 @@
 {
-    "numChildren":100
+    "numChildren":100,
+    "elitism":{
+        "do"    : true,
+        "N"     : 3
+    },
+    "crossover": {
+        "do"           : true,
+        "keepSmallest" : false
+    },
+    "mutation":{
+        "do"    : true,
+        "rate"  : 0.01
+    }
 }

@@ -333,22 +333,102 @@ class GA():
                 resultErr.append( sess.run(self.costFunction, 
                         feed_dict = { self.X : X, self.y : y }))
 
+
         # Update the population
         resultTensors = []
+        finalCosts    = []
+        if self.GAconfig['elitism']['do']:
+            sortErrs = sorted(list(zip(self.currentErr, range(len(self.currentErr)))))
+            for i in range(self.GAconfig['elitism']['N']):
+                resultTensors.append( self.population[ sortErrs[i][1] ] )
+                finalCosts.append( self.currentErr[ sortErrs[i][1] ] )
+
         for i, ((c1, c2), v) in enumerate(zip(choices, resultErr)):
-            minVal = min( [self.currentErr[c1], self.currentErr[c2], v] )
-            if minVal == self.currentErr[c1]:
-                resultTensors.append( self.population[c1] )
-            elif minVal == self.currentErr[c2]:
-                resultTensors.append( self.population[c2] )
+            if len(resultTensors) >= len(resultErr): break
+
+            if self.GAconfig['crossover']['keepSmallest']:
+                minVal = min( [self.currentErr[c1], self.currentErr[c2], v] )
+                if minVal == self.currentErr[c1]:
+                    resultTensors.append( self.population[c1] )
+                    finalCosts.append( self.currentErr[c1] )
+                    
+                elif minVal == self.currentErr[c2]:
+                    resultTensors.append( self.population[c2] )
+                    finalCosts.append( self.currentErr[c2] )
+                    
+                else:
+                    resultTensors.append( calcs[i] )
+                    finalCosts.append( v )
+
             else:
                 resultTensors.append( calcs[i] )
+                finalCosts.append( v )
 
         self.population = resultTensors
+        self.currentErr = np.array( finalCosts )
 
         # Update the costs
-        self.findPopulationCosts(X, y)
+        # self.findPopulationCosts(X, y)
         self.printCurrErr()
+
+        # print(list(zip(self.currentErr, finalCosts)))
+
+        return
+
+    @lD.log(logBase + '.mutation')
+    def mutation(logger, self, X, y):
+        '''mutate a small percentage of the population
+        
+        Mutate a small percentage of population. Make sure that we dont
+        touch the best N. This will result in implicit elitism. For 
+        crossover, this is implicitely done when the best one is always 
+        retained
+
+        Decorators:
+            lD.log
+        
+        Arguments:
+            logger {logging.Logger} -- logging object. This should not
+                be passed to this iniitalizer. This will be inserted
+                into the function directly form the decorator. 
+            self {instance} -- variable for the instance of the GA class
+            X {numpy.array} -- The set of input values to be tested
+            y {numpy.array} -- The expected results
+        '''
+
+        sortErrs = sorted(list(zip(self.currentErr, range(len(self.currentErr)))))
+        if self.GAconfig['elitism']['do']:
+            elites = [ sortErrs[i][1] for i in range(self.GAconfig['elitism']['N'])]
+
+        resultTensors = []
+        finalCosts    = []
+        if self.GAconfig['elitism']['do']:
+            sortErrs = sorted(list(zip(self.currentErr, range(len(self.currentErr)))))
+            for i in range(self.GAconfig['elitism']['N']):
+                resultTensors.append( self.population[ sortErrs[i][1] ] )
+                finalCosts.append( self.currentErr[ sortErrs[i][1] ] )
+
+        nMutations = 0
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            
+            for i in range( len(self.currentErr) ):
+                if len(resultTensors) >= len(self.currentErr): break
+
+                if np.random.rand() > self.GAconfig['mutation']['rate']:
+                    resultTensors.append( self.population[ i ] )
+                    finalCosts.append( self.currentErr[ i ] )
+                else:
+
+                    nMutations += 1
+
+                    resultTensors.append([(p * np.random.rand() * 2) for p in self.population[i] ])
+                    for j in range(len(self.variables)):
+                        sess.run(tf.assign( self.variables[j], resultTensors[-1][j] ))
+                        finalCosts.append( sess.run(self.costFunction, 
+                            feed_dict = { self.X : X, self.y : y }))
+
+        logger.info('The number of mutations = {}'.format( nMutations ) )
 
         return
 

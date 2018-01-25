@@ -34,8 +34,8 @@ def testGA(logger):
     #     (1, None)  = (1, 3) x (3, None)
     # In this specific case, W = [0.5, 0.2, 1]
 
-    Warr = np.array([[0.1, 0, 0]])
-    Xarr = np.random.random((3, 1000))
+    Warr = np.array([[0.5, 0.2, 1]])
+    Xarr = np.random.random((3, 10000))
     yarr = np.dot(Warr, Xarr)
 
     # W  = tf.convert_to_tensor(np.random.rand(1, 3), dtype=tf.float32)

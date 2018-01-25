@@ -1,5 +1,5 @@
 {
-    "numChildren":100,
+    "numChildren": 100,
     "elitism":{
         "do"    : true,
         "N"     : 3

@@ -273,10 +273,30 @@ class GA():
             self {instance} -- variable for the instance of the GA class
         '''
 
-    
-        print('Error Summary: {:.5}, {:.5}, {:.5}'.format(
-            self.currentErr.min(), self.currentErr.mean(), self.currentErr.max()), flush=True  )
-        return
+        result = 'Error Summary: {:.5}, {:.5}, {:.5}'.format(
+            self.currentErr.min(), self.currentErr.mean(), self.currentErr.max())
+        return result
+
+    @lD.log(logBase + '.printBestGene')
+    def printBestGene(logger, self):
+        '''prints the weights of the best gene
+        
+        [description]
+        
+        Parameters
+        ----------
+        logger : {[type]}
+            [description]
+        self : {[type]}
+            [description]
+        '''
+
+        sortErrs = sorted(list(zip(self.currentErr, range(len(self.currentErr)))))
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            result = str(sess.run(self.population[sortErrs[0][1]]))
+        
+        return result
 
     @lD.log(logBase + '.crossover')
     def crossover(logger, self, X, y):
@@ -369,8 +389,6 @@ class GA():
 
         # Update the costs
         # self.findPopulationCosts(X, y)
-        self.printCurrErr()
-
         # print(list(zip(self.currentErr, finalCosts)))
 
         return

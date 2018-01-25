@@ -58,7 +58,15 @@ def testGA(logger):
         simpleGA.printCurrErr()
         for i in range(30):
             simpleGA.crossover(Xarr, yarr)
+            # print('Crossover:') 
+            # simpleGA.printCurrErr()
+
             simpleGA.mutation(Xarr, yarr)
+            # print('Mutation:') 
+            # simpleGA.printCurrErr()
+
+            print('Error: {}, Best Gene:{}'.format(simpleGA.printCurrErr(), simpleGA.printBestGene()), flush=True)
+            
 
     if False:
         print('\nThis should give low error ...')

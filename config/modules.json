@@ -2,13 +2,20 @@
     {
         "moduleName" : "module1",
         "path"       : "module1/module1.py",
-        "execute"    : true ,
+        "execute"    : false ,
         "description": "",
         "owner"      : ""
     },
     {
         "moduleName" : "moduleGA",
         "path"       : "moduleGA/moduleGA.py",
+        "execute"    : false ,
+        "description": "",
+        "owner"      : ""
+    },
+    {
+        "moduleName" : "moduleNN",
+        "path"       : "moduleNN/moduleNN.py",
         "execute"    : true ,
         "description": "",
         "owner"      : ""

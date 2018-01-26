@@ -1,23 +1,51 @@
 from logs import logDecorator as lD 
-import json
+import json, os
+
+import tensorflow        as tf
+import numpy             as np
+import matplotlib.pyplot as plt
 
 config = json.load(open('../config/config.json'))
 logBase = config['logging']['logBase'] + '.moduleNN'
 
 
-@lD.log(logBase + '.doSomething')
-def doSomething(logger):
-    '''print a line
+@lD.log(logBase + '.generateNN')
+def generateNN(logger):
+    '''Optimize a neural network
     
-    This function simply prints a single line
-    
+    This generates a very simple neural network structure and
+    optimize it. 
+
     Parameters
     ----------
     logger : {[type]}
         [description]
     '''
 
-    print('We are in moduleNN')
+    # We shall generate a fairly simple function and attempt to
+    # see whether the neural network generates a model that can
+    # can be easily learned with normal gradient decent. The
+    # problem we are modeling is the following:
+    # Input: [x1, x2]
+    # Output: y = 2*sin(x1) + 3*cos(x2)
+    # we shall generate i/o values for:
+    #    -np.pi/2 <= x1 <= np.pi
+    #    -np.pi/2 <= x2 <= np.pi
+
+    Xarr = np.random.rand(2, 1000) * np.pi - np.pi/2
+    y    = 2*np.sin(Xarr[0,:]) + 3*np.cos(Xarr[1,:])
+
+    # This is for saving the parameter space. 
+    if False:
+        plt.scatter( Xarr[0, :], Xarr[1, :], c=y, alpha=0.1 )
+        plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'surf.png'))
+
+
+    
+
+
+    print(np.random.rand(3, 2))
+    # tf.convert_to_tensor(np.random.rand())
 
     return
 
@@ -35,7 +63,7 @@ def main(logger):
         The logger function
     '''
 
-    doSomething()
+    generateNN()
 
     return
 

@@ -32,20 +32,62 @@ def generateNN(logger):
     #    -np.pi/2 <= x1 <= np.pi
     #    -np.pi/2 <= x2 <= np.pi
 
-    Xarr = np.random.rand(2, 1000) * np.pi - np.pi/2
-    y    = 2*np.sin(Xarr[0,:]) + 3*np.cos(Xarr[1,:])
+    Xarr = np.random.rand(2, 10000) * np.pi - np.pi/2
+    # yarr = 2*np.sin(Xarr[0,:]) + 3*np.cos(Xarr[1,:])
+    yarr = 2*Xarr[0,:] + 3*Xarr[1,:]
 
     # This is for saving the parameter space. 
     if False:
-        plt.scatter( Xarr[0, :], Xarr[1, :], c=y, alpha=0.1 )
+        plt.scatter( Xarr[0, :], Xarr[1, :], c=yarr, alpha=0.1 )
         plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'surf.png'))
 
 
+    # Model this with a 3 layer network. 
+    # [2, 1000] -> [10, 1000] -> [5, 1000] -> [1, 1000]
+    decimator = 0.1
+
+    inp = tf.placeholder(dtype=tf.float32, shape=(2, None))
+    out = tf.placeholder(dtype=tf.float32, shape=(1, None))
+    W1  = tf.Variable(tf.convert_to_tensor( np.random.rand( 10, 2 ) * decimator, dtype=tf.float32 ))
+    W2  = tf.Variable(tf.convert_to_tensor( np.random.rand( 5, 10 ) * decimator, dtype=tf.float32 ))
+    W3  = tf.Variable(tf.convert_to_tensor( np.random.rand( 1, 5 )  * decimator, dtype=tf.float32 ))
+
+
+    v1 = tf.keras.activations.tanh( tf.matmul( W1, inp) )
+    v1 = tf.keras.activations.tanh( tf.matmul( W2, v1) )
+    v1 = tf.matmul( W3, v1) # This is a regression problem
+
+    error  = tf.reduce_mean(  (v1 - out)**2  )
+    sqrErr = tf.sqrt( error )
+
+    opt = tf.train.AdamOptimizer(learning_rate=0.1).minimize( sqrErr )
+
+    results = []
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+
+        for i in range(10000):
+            _, result = sess.run( [opt, sqrErr], feed_dict = {
+                inp: Xarr, out: yarr.reshape(1, -1)
+                })
+
+            results.append(result)
+            if i%500 == 0:
+                print(result, flush=True)
+
+        yHat = sess.run(v1, feed_dict = {
+                inp: Xarr, out: yarr.reshape(1, -1)
+                })
     
 
+    plt.figure()
+    plt.plot(results)
+    plt.yscale('log')
+    plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'error.png'))
 
-    print(np.random.rand(3, 2))
-    # tf.convert_to_tensor(np.random.rand())
+    plt.figure()
+    plt.plot(yarr, yHat[0, :], 's', alpha=0.1 )
+    plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'values.png'))
 
     return
 

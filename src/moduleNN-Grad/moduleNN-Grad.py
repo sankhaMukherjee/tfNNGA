@@ -50,6 +50,7 @@ def generateNN(logger):
     # [2, 1000] -> [10, 1000] -> [5, 1000] -> [1, 1000]
     decimator      = 0.1
     regularization = 1e-4
+    iterations     = 1000
 
     inp = tf.placeholder(dtype=tf.float32, shape=(2, None))
     out = tf.placeholder(dtype=tf.float32, shape=(1, None))
@@ -57,12 +58,14 @@ def generateNN(logger):
     W2  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 5, 10 )  - 0.5) * decimator , dtype=tf.float32 ))
     W3  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 1, 5 )  - 0.5)  * decimator , dtype=tf.float32 ))
 
+    Ws = [W1, W2, W3]
+
     v1 = tf.keras.activations.tanh( tf.matmul( W1, inp) )
     v1 = tf.keras.activations.tanh( tf.matmul( W2, v1) )
     v1 = tf.matmul( W3, v1) # This is a regression problem
 
     # reg = np.mean([tf.reduce_mean(W**2) for W in [W1, W2, W3]]) # L2 regularization
-    regL2 = tf.reduce_mean(tf.convert_to_tensor([tf.reduce_mean(W**2) for W in [W1, W2, W3]]))
+    regL2 = tf.reduce_mean(tf.convert_to_tensor([tf.reduce_mean(W**2) for W in Ws ]))
 
     error  = tf.reduce_mean(  (v1 - out)**2  )
     sqrErr = tf.sqrt( error + regularization*tf.convert_to_tensor(regL2) )
@@ -70,15 +73,25 @@ def generateNN(logger):
     opt = tf.train.AdamOptimizer(learning_rate=0.01).minimize( sqrErr )
 
     results = []
+    deltas  = []
+    stds    = []
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
-        for i in tqdm(range(10000)):
+        oldVals = sess.run(Ws)
+
+        for i in tqdm(range(iterations)):
             _, result = sess.run( [opt, sqrErr], feed_dict = {
                 inp: Xarr, out: yarr.reshape(1, -1)
                 })
 
             results.append(result)
+            results.append(result)
+            newVals = sess.run(Ws)
+            deltas.append( [(o-n).mean() for o, n in zip(oldVals, newVals)] )
+            stds.append( [(o-n).std() for o, n in zip(oldVals, newVals)] )
+            oldVals = newVals.copy()
+
             if i%500 == 0:
                 tqdm.write(str(result))
 
@@ -87,6 +100,8 @@ def generateNN(logger):
                 })
 
         print(sess.run([W1, W2, W3]))
+
+    # print(deltas)
     
 
     plt.figure()
@@ -97,6 +112,13 @@ def generateNN(logger):
     plt.figure()
     plt.plot(yarr, yHat[0, :], 's', alpha=0.1 )
     plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'values.png'))
+
+    plt.figure()
+    for i, (d, s) in enumerate(zip(np.array(deltas).T, np.array(stds).T)):
+        plt.plot(d, label='{}'.format(i) )
+        plt.fill_between(d-s, d+s, alpha=0.1, label='{}'.format(i) )
+    plt.legend()
+    plt.savefig(os.path.join(config['results']['resultsImgFolder'], 'deltas.png'))
 
     return
 

@@ -52,16 +52,15 @@ def generateNN(logger):
     out = tf.placeholder(dtype=tf.float32, shape=(1, None))
     W1  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 10, 2 )  - 0.5) * decimator , dtype=tf.float32 ))
     W2  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 5, 10 )  - 0.5) * decimator , dtype=tf.float32 ))
-    W3  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 1, 5 )  - 0.5)  * decimator , dtype=tf.float32 ))
+    W3  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 1, 5  )  - 0.5) * decimator , dtype=tf.float32 ))
+    Ws  = [W1, W2, W3]
 
     v1 = tf.keras.activations.tanh( tf.matmul( W1, inp) )
     v1 = tf.keras.activations.tanh( tf.matmul( W2, v1) )
     v1 = tf.matmul( W3, v1) # This is a regression problem
 
-    # reg = np.mean([tf.reduce_mean(W**2) for W in [W1, W2, W3]]) # L2 regularization
-    regL2 = tf.reduce_mean(tf.convert_to_tensor([tf.reduce_mean(W**2) for W in [W1, W2, W3]]))
-
-    error  = tf.reduce_mean(  (v1 - out)**2  )
+    regL2  = tf.reduce_mean( tf.convert_to_tensor([ tf.reduce_mean(W**2) for W in Ws  ]))
+    error  = tf.reduce_mean( (v1 - out)**2 )
     sqrErr = tf.sqrt( error + regularization*tf.convert_to_tensor(regL2) )
 
     opt = tf.train.AdamOptimizer(learning_rate=0.01).minimize( sqrErr )

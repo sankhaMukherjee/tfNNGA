@@ -47,6 +47,7 @@ def generateNN(logger):
     # [2, 1000] -> [10, 1000] -> [5, 1000] -> [1, 1000]
     decimator      = 0.1
     regularization = 1e-4
+    iterations     = 10000
 
     inp = tf.placeholder(dtype=tf.float32, shape=(2, None))
     out = tf.placeholder(dtype=tf.float32, shape=(1, None))
@@ -70,7 +71,7 @@ def generateNN(logger):
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
-        for i in tqdm(range(10000)):
+        for i in tqdm(range(iterations)):
             _, result = sess.run( [opt, sqrErr], feed_dict = {
                 inp: Xarr, out: yarr.reshape(1, -1)
                 })

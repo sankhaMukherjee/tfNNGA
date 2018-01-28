@@ -1,4 +1,5 @@
 from logs import logDecorator as lD 
+from tqdm import tqdm
 import json, os
 
 import tensorflow        as tf
@@ -44,40 +45,45 @@ def generateNN(logger):
 
     # Model this with a 3 layer network. 
     # [2, 1000] -> [10, 1000] -> [5, 1000] -> [1, 1000]
-    decimator = 0.1
+    decimator      = 0.1
+    regularization = 1e-4
 
     inp = tf.placeholder(dtype=tf.float32, shape=(2, None))
     out = tf.placeholder(dtype=tf.float32, shape=(1, None))
-    W1  = tf.Variable(tf.convert_to_tensor( np.random.rand( 10, 2 ) * decimator, dtype=tf.float32 ))
-    W2  = tf.Variable(tf.convert_to_tensor( np.random.rand( 5, 10 ) * decimator, dtype=tf.float32 ))
-    W3  = tf.Variable(tf.convert_to_tensor( np.random.rand( 1, 5 )  * decimator, dtype=tf.float32 ))
-
+    W1  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 10, 2 )  - 0.5) * decimator , dtype=tf.float32 ))
+    W2  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 5, 10 )  - 0.5) * decimator , dtype=tf.float32 ))
+    W3  = tf.Variable( tf.convert_to_tensor( (np.random.rand( 1, 5 )  - 0.5)  * decimator , dtype=tf.float32 ))
 
     v1 = tf.keras.activations.tanh( tf.matmul( W1, inp) )
     v1 = tf.keras.activations.tanh( tf.matmul( W2, v1) )
     v1 = tf.matmul( W3, v1) # This is a regression problem
 
-    error  = tf.reduce_mean(  (v1 - out)**2  )
-    sqrErr = tf.sqrt( error )
+    # reg = np.mean([tf.reduce_mean(W**2) for W in [W1, W2, W3]]) # L2 regularization
+    regL2 = tf.reduce_mean(tf.convert_to_tensor([tf.reduce_mean(W**2) for W in [W1, W2, W3]]))
 
-    opt = tf.train.AdamOptimizer(learning_rate=0.1).minimize( sqrErr )
+    error  = tf.reduce_mean(  (v1 - out)**2  )
+    sqrErr = tf.sqrt( error + regularization*tf.convert_to_tensor(regL2) )
+
+    opt = tf.train.AdamOptimizer(learning_rate=0.01).minimize( sqrErr )
 
     results = []
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
 
-        for i in range(10000):
+        for i in tqdm(range(10000)):
             _, result = sess.run( [opt, sqrErr], feed_dict = {
                 inp: Xarr, out: yarr.reshape(1, -1)
                 })
 
             results.append(result)
             if i%500 == 0:
-                print(result, flush=True)
+                tqdm.write(str(result))
 
         yHat = sess.run(v1, feed_dict = {
                 inp: Xarr, out: yarr.reshape(1, -1)
                 })
+
+        print(sess.run([W1, W2, W3]))
     
 
     plt.figure()

@@ -16,6 +16,13 @@
     {
         "moduleName" : "moduleNN",
         "path"       : "moduleNN/moduleNN.py",
+        "execute"    : false,
+        "description": "",
+        "owner"      : ""
+    },
+    {
+        "moduleName" : "moduleNN-Grad",
+        "path"       : "moduleNN-Grad/moduleNN-Grad.py",
         "execute"    : true ,
         "description": "",
         "owner"      : ""
